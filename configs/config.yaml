@@ -1,0 +1,18 @@
+app:
+  name: iam-platform
+  env: development
+
+server:
+  port: "8080"
+
+db:
+  url: postgres://iam:secret@localhost:5432/iam_db?sslmode=disable
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: my-very-secure-secret
+  expiration: 60
