@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"iam-platform/internal/models"
 	"iam-platform/internal/repository/interfaces"
@@ -47,4 +49,47 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	var u models.User
 	err := row.Scan(&u.ID, &u.Email, &u.CreatedAt)
 	return &u, err
+}
+
+func (r *UserRepository) UpdatePasswordHash(
+	ctx context.Context,
+	userID string,
+	newHash string,
+) error {
+
+	query := `
+		UPDATE users
+		SET password_hash = $1,
+		    updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		newHash,
+		userID,
+	)
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to update password hash: %w",
+			err,
+		)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to get rows affected: %w",
+			err,
+		)
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }

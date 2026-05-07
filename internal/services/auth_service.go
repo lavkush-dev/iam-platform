@@ -25,11 +25,36 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (string, 
 		return "", errors.New("invalid credentials")
 	}
 
-	if !utils.CheckPassword(req.Password, user.PasswordHash) {
+	valid, rehashRequired, newHash, err :=
+		utils.CheckPassword(
+			req.Password,
+			user.PasswordHash,
+		)
+
+	if err != nil {
+		return "", err
+	}
+
+	if !valid {
 		return "", errors.New("invalid credentials")
 	}
 
+	// migrate bcrypt -> argon2id
+	if rehashRequired {
+
+		err = s.userRepo.UpdatePasswordHash(
+			ctx,
+			user.ID,
+			newHash,
+		)
+
+		if err != nil {
+			return "", err
+		}
+	}
+
 	token, err := s.jwt.Generate(user.ID)
+
 	if err != nil {
 		return "", err
 	}
