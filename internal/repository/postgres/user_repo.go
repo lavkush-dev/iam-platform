@@ -40,11 +40,11 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	row := r.db.QueryRowContext(ctx,
-		"SELECT id, email FROM users WHERE id=$1",
+		"SELECT id, email, created_at FROM users WHERE id=$1",
 		id,
 	)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Email)
+	err := row.Scan(&u.ID, &u.Email, &u.CreatedAt)
 	return &u, err
 }
